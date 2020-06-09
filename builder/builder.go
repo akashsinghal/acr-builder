@@ -6,6 +6,7 @@ package builder
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -130,6 +131,86 @@ func (b *Builder) RunTask(ctx context.Context, task *graph.Task) error {
 		}
 	}
 
+	//TODO:
+	//For each volume:
+	for _, volMount := range task.VolumeMounts {
+		// 1. take the values and dump into a file
+		var args []string
+		var sb strings.Builder
+		if runtime.GOOS == util.WindowsOS {
+			args = []string{"powershell.exe", "-Command"}
+		} else {
+			args = []string{"/bin/sh", "-c"}
+		}
+		for index, valueMount := range volMount.Values {
+			val := valueMount.Value
+			if valueMount.B64dec {
+				decoded, err := base64.StdEncoding.DecodeString(val)
+				if err != nil {
+					return errors.New("failed to decode Base64 value. please make sure value provided is Base64 encoded")
+				}
+				val = string(decoded)
+			}
+			if index == 0 {
+				sb.WriteString("echo ")
+				sb.WriteString(val)
+				sb.WriteString(" >> ")
+				sb.WriteString(valueMount.FileName)
+			} else {
+				sb.WriteString(" && echo ")
+				sb.WriteString(val)
+				sb.WriteString(" >> ")
+				sb.WriteString(valueMount.FileName)
+			}
+		}
+		args = append(args, sb.String())
+		var buf bytes.Buffer
+		if err := b.procManager.Run(ctx, args, nil, &buf, &buf, ""); err != nil {
+			return errors.Wrapf(err, "failed to write value, %s to file %s", buf.String())
+		}
+		log.Println("buffer: ", buf.String())
+		log.Println("Created new file for ", volMount.Name)
+		// 2. create a dummy data container which makes new volume and puts file in it
+		var dataContainerArgs []string
+		var dataSB strings.Builder
+		if runtime.GOOS == util.WindowsOS {
+			dataContainerArgs = []string{"powershell.exe", "-Command"}
+		} else {
+			dataContainerArgs = []string{"/bin/sh", "-c"}
+		}
+		dataSB.WriteString("docker run --rm -v $PWD:/source -v ")
+		dataSB.WriteString(volMount.Name)
+		dataSB.WriteString(":/dest -w /source alpine cp ")
+		for _, valMount := range volMount.Values {
+			dataSB.WriteString(valMount.FileName)
+			dataSB.WriteString(" ")
+		}
+		dataSB.WriteString("/dest")
+		dataContainerArgs = append(dataContainerArgs, dataSB.String())
+		var buf2 bytes.Buffer
+		if err := b.procManager.Run(ctx, dataContainerArgs, nil, &buf2, &buf2, ""); err != nil {
+			return errors.Wrapf(err, "failed to populate container, %s to file %s", buf2.String())
+		}
+		// 3. delete this new file
+		var deleteFileArgs []string
+		var deleteSB strings.Builder
+		if runtime.GOOS == util.WindowsOS {
+			deleteFileArgs = []string{"powershell.exe", "-Command"}
+		} else {
+			deleteFileArgs = []string{"/bin/sh", "-c"}
+		}
+		deleteSB.WriteString("rm ")
+		for _, valMount := range volMount.Values {
+			deleteSB.WriteString(valMount.FileName)
+			deleteSB.WriteString(" ")
+		}
+		deleteFileArgs = append(deleteFileArgs, deleteSB.String())
+		var buf3 bytes.Buffer
+		if err := b.procManager.Run(ctx, deleteFileArgs, nil, &buf3, &buf3, ""); err != nil {
+			return errors.Wrapf(err, "failed to delete files ", buf3.String())
+		}
+	}
+
 	for _, child := range task.Dag.Root.Children() {
 		go b.processVertex(ctx, task, task.Dag.Root, child, errorChan)
 	}
@@ -186,6 +267,10 @@ func (b *Builder) RunTask(ctx context.Context, task *graph.Task) error {
 // CleanTask iterates through all build steps and removes
 // their corresponding containers.
 func (b *Builder) CleanTask(ctx context.Context, task *graph.Task) {
+
+	// TODO:
+	// Iterate through all volumes and delete each with wrapper method
+
 	args := []string{"docker", "rm", "-f"}
 	for _, n := range task.Dag.Nodes {
 		step := n.Value
@@ -240,6 +325,7 @@ func (b *Builder) processVertex(ctx context.Context, task *graph.Task, parent *g
 }
 
 func (b *Builder) runStep(ctx context.Context, step *graph.Step) error {
+	log.Printf("Found Mounts: %v", step.Mounts[0].ContainerFilePath)
 	log.Printf("Executing step ID: %s. Timeout(sec): %d, Working directory: '%s', Network: '%s'\n", step.ID, step.Timeout, step.WorkingDirectory, step.Network)
 	if step.StartDelay > 0 {
 		log.Printf("Waiting %d seconds before executing step ID: %s\n", step.StartDelay, step.ID)
