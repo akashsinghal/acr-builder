@@ -5,7 +5,6 @@ package graph
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 	"strings"
 	"time"
@@ -101,7 +100,6 @@ type Step struct {
 
 // Validate validates the step and returns an error if the Step has problems.
 func (s *Step) Validate() error {
-	log.Println("Validate called in Step.go")
 	if s == nil {
 		return nil
 	}
