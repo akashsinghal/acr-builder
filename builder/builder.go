@@ -462,11 +462,12 @@ func parseImageNameFromArgs(cmdArgs string) string {
 func (b *Builder) createFilesForVolume(ctx context.Context, volMount *volume.VolumeMount) error {
 	var args []string
 	var sb strings.Builder
-	sb.WriteString("mkdir " + volMount.Name)
 	if runtime.GOOS == util.WindowsOS {
 		args = []string{"powershell.exe", "-Command"}
+		sb.WriteString("mkdir " + volMount.Name)
 	} else {
 		args = []string{"/bin/sh", "-c"}
+		sb.WriteString("mkdir " + volMount.Name + " && ")
 	}
 	for _, valueMount := range volMount.Values {
 		val := valueMount.Value
@@ -477,10 +478,19 @@ func (b *Builder) createFilesForVolume(ctx context.Context, volMount *volume.Vol
 			}
 			val = string(decoded)
 		}
-		sb.WriteString(" && echo ")
-		sb.WriteString(val)
-		sb.WriteString(" >> ")
-		sb.WriteString(volMount.Name + "/" + valueMount.FileName)
+		if runtime.GOOS == util.WindowsOS {
+			sb.WriteString("; Set-Content -Path C:\\")
+			sb.WriteString(volMount.Name + "\\" + valueMount.FileName)
+			sb.WriteString(" -Value @\"\n")
+			sb.WriteString(val)
+			sb.WriteString("\n\"@")
+		} else {
+			sb.WriteString("cat >> ")
+			sb.WriteString(volMount.Name + "/" + valueMount.FileName)
+			sb.WriteString(" <<EOL\n")
+			sb.WriteString(val)
+			sb.WriteString("\nEOL\n")
+		}
 	}
 	args = append(args, sb.String())
 	var buf bytes.Buffer
