@@ -465,6 +465,7 @@ func (b *Builder) createFilesForVolume(ctx context.Context, volMount *volume.Vol
 	if runtime.GOOS == util.WindowsOS {
 		args = []string{"powershell.exe", "-Command"}
 		sb.WriteString("mkdir " + volMount.Name)
+		log.Println("making directory " + volMount.Name)
 	} else {
 		args = []string{"/bin/sh", "-c"}
 		sb.WriteString("mkdir " + volMount.Name + " && ")
@@ -477,10 +478,11 @@ func (b *Builder) createFilesForVolume(ctx context.Context, volMount *volume.Vol
 				return errors.New("failed to decode Base64 value. please make sure value provided is Base64 encoded")
 			}
 			val = string(decoded)
+			log.Println("decoded value " + val + " into string")
 		}
 		if runtime.GOOS == util.WindowsOS {
-			sb.WriteString("; Set-Content -Path C:\\")
-			sb.WriteString(volMount.Name + "\\" + valueMount.FileName)
+			sb.WriteString("; Add-Content -Path ")
+			sb.WriteString(volMount.Name + "/" + valueMount.FileName)
 			sb.WriteString(" -Value @\"\n")
 			sb.WriteString(val)
 			sb.WriteString("\n\"@")
@@ -507,17 +509,19 @@ func (b *Builder) populateVolumeWithFiles(ctx context.Context, volMount *volume.
 	var dataSB strings.Builder
 	if runtime.GOOS == util.WindowsOS {
 		dataContainerArgs = []string{"powershell.exe", "-Command"}
+		dataSB.WriteString("docker run --rm -v " + b.workspaceDir + "\\" + volMount.Name + ":c:\\source -v ")
+		dataSB.WriteString(volMount.Name + ":c:\\dest -w /source ")
+		dataSB.WriteString("mcr.microsoft.com/windows/nanoserver:2004 cmd.exe /c copy c:\\source c:\\dest")
 	} else {
 		dataContainerArgs = []string{"/bin/sh", "-c"}
+		dataSB.WriteString("docker run --rm -v " + b.workspaceDir + ":/source -v ")
+		dataSB.WriteString(volMount.Name + ":/dest -w /source alpine cp ")
+		for _, valMount := range volMount.Values {
+			dataSB.WriteString(volMount.Name + "/" + valMount.FileName)
+			dataSB.WriteString(" ")
+		}
+		dataSB.WriteString("/dest")
 	}
-	dataSB.WriteString("docker run --rm -v " + b.workspaceDir + ":/source -v ")
-	dataSB.WriteString(volMount.Name)
-	dataSB.WriteString(":/dest -w /source alpine cp ")
-	for _, valMount := range volMount.Values {
-		dataSB.WriteString(volMount.Name + "/" + valMount.FileName)
-		dataSB.WriteString(" ")
-	}
-	dataSB.WriteString("/dest")
 	dataContainerArgs = append(dataContainerArgs, dataSB.String())
 	var buf bytes.Buffer
 	if err := b.procManager.Run(ctx, dataContainerArgs, nil, &buf, &buf, ""); err != nil {
