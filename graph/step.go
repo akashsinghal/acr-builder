@@ -155,11 +155,11 @@ func ValidateMounts(mounts []*volume.Mount) error {
 			return err
 		}
 		// make sure each container file path provided is unique
-		if _, exists := duplicate[m.ContainerFilePath]; exists {
+		if _, exists := duplicate[m.MountPath]; exists {
 			return errors.New("mount with duplicate container file path found")
 		}
 
-		duplicate[m.ContainerFilePath] = struct{}{}
+		duplicate[m.MountPath] = struct{}{}
 	}
 	return nil
 }

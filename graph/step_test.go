@@ -118,8 +118,8 @@ func TestValidate(t *testing.T) {
 				Build: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "c",
-						ContainerFilePath: "/run/test",
+						Name:      "c",
+						MountPath: "/run/test",
 					},
 				},
 			},
@@ -131,8 +131,8 @@ func TestValidate(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "c",
-						ContainerFilePath: "/run/test",
+						Name:      "c",
+						MountPath: "/run/test",
 					},
 				},
 			},
@@ -144,12 +144,12 @@ func TestValidate(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "c",
-						ContainerFilePath: "/run/test",
+						Name:      "c",
+						MountPath: "/run/test",
 					},
 					&volume.Mount{
-						Name:              "d",
-						ContainerFilePath: "/run/test",
+						Name:      "d",
+						MountPath: "/run/test",
 					},
 				},
 			},
@@ -161,12 +161,12 @@ func TestValidate(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "c",
-						ContainerFilePath: "/run/test",
+						Name:      "c",
+						MountPath: "/run/test",
 					},
 					&volume.Mount{
-						Name:              "d",
-						ContainerFilePath: "/run/test2",
+						Name:      "d",
+						MountPath: "/run/test2",
 					},
 				},
 			},
@@ -178,12 +178,12 @@ func TestValidate(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "d",
-						ContainerFilePath: "/run/test2",
+						Name:      "d",
+						MountPath: "/run/test2",
 					},
 					&volume.Mount{
-						Name:              "d",
-						ContainerFilePath: "/run/test",
+						Name:      "d",
+						MountPath: "/run/test",
 					},
 				},
 			},
@@ -224,8 +224,8 @@ func TestValidateMountVolumeNames(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "vol1",
-						ContainerFilePath: "/run/test2",
+						Name:      "vol1",
+						MountPath: "/run/test2",
 					},
 				},
 			},
@@ -237,8 +237,8 @@ func TestValidateMountVolumeNames(t *testing.T) {
 				Cmd: "b",
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "vol2",
-						ContainerFilePath: "/run/test2",
+						Name:      "vol2",
+						MountPath: "/run/test2",
 					},
 				},
 			},
@@ -485,8 +485,8 @@ func TestHasMounts(t *testing.T) {
 			&Step{
 				Mounts: []*volume.Mount{
 					&volume.Mount{
-						Name:              "a",
-						ContainerFilePath: "/run/test",
+						Name:      "a",
+						MountPath: "/run/test",
 					},
 				},
 			},

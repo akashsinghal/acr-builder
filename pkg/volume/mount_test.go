@@ -19,28 +19,28 @@ func TestMountValidate(t *testing.T) {
 		{
 			&Mount{
 				Name:              "",
-				ContainerFilePath: "/run/test",
+				MountPath: "/run/test",
 			},
 			true,
 		},
 		{
 			&Mount{
 				Name:              "test",
-				ContainerFilePath: "",
+				MountPath: "",
 			},
 			true,
 		},
 		{
 			&Mount{
 				Name:              "",
-				ContainerFilePath: "",
+				MountPath: "",
 			},
 			true,
 		},
 		{
 			&Mount{
 				Name:              "test",
-				ContainerFilePath: "/run/test",
+				MountPath: "/run/test",
 			},
 			false,
 		},

@@ -134,7 +134,7 @@ func (b *Builder) getDockerRunArgsForStep(
 
 	var volMounts = make(map[string]string)
 	for _, mount := range step.Mounts {
-		volMounts[mount.Name] = mount.ContainerFilePath
+		volMounts[mount.Name] = mount.MountPath
 	}
 
 	return b.getDockerRunArgs(

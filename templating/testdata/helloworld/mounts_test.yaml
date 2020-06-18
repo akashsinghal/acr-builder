@@ -16,4 +16,4 @@ steps:
   - cmd: bash cat /run/test/mysecret1 /run/test/mysecret2
     mounts:
       - name: mysecrets
-        containerFilePath: /run/test
+        mountPath: /run/test
