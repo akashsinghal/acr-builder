@@ -19,10 +19,9 @@ func TestVolumeMountValidate(t *testing.T) {
 		{
 			&VolumeMount{
 				Name: "",
-				Values: []*ValueMount{
-					&ValueMount{
-						FileName: "a",
-						Value:    "this is a test",
+				Values: []map[string]string{
+					{
+						"a": "this is a test",
 					},
 				},
 			},
@@ -31,24 +30,23 @@ func TestVolumeMountValidate(t *testing.T) {
 		{
 			&VolumeMount{
 				Name:   "test",
-				Values: []*ValueMount{},
+				Values: []map[string]string{},
 			},
 			true,
 		},
 		{
 			&VolumeMount{
 				Name:   "",
-				Values: []*ValueMount{},
+				Values: []map[string]string{},
 			},
 			true,
 		},
 		{
 			&VolumeMount{
 				Name: "test",
-				Values: []*ValueMount{
-					&ValueMount{
-						FileName: "a",
-						Value:    "this is a test",
+				Values: []map[string]string{
+					{
+						"a": "this is a test",
 					},
 				},
 			},
@@ -56,11 +54,21 @@ func TestVolumeMountValidate(t *testing.T) {
 		},
 		{
 			&VolumeMount{
-				Name: "test",
-				Values: []*ValueMount{
-					&ValueMount{
-						FileName: "",
-						Value:    "this is a test",
+				Name: "test123-_",
+				Values: []map[string]string{
+					{
+						"a": "this is a test",
+					},
+				},
+			},
+			false,
+		},
+		{
+			&VolumeMount{
+				Name: "test/.",
+				Values: []map[string]string{
+					{
+						"a": "this is a test",
 					},
 				},
 			},
@@ -69,10 +77,20 @@ func TestVolumeMountValidate(t *testing.T) {
 		{
 			&VolumeMount{
 				Name: "test",
-				Values: []*ValueMount{
-					&ValueMount{
-						FileName: "a",
-						Value:    "",
+				Values: []map[string]string{
+					{
+						"": "this is a test",
+					},
+				},
+			},
+			true,
+		},
+		{
+			&VolumeMount{
+				Name: "test",
+				Values: []map[string]string{
+					{
+						"a": "",
 					},
 				},
 			},

@@ -470,28 +470,28 @@ func (b *Builder) createFilesForVolume(ctx context.Context, volMount *volume.Vol
 		args = []string{"/bin/sh", "-c"}
 		sb.WriteString("mkdir " + volMount.Name + " && ")
 	}
-	for _, valueMount := range volMount.Values {
-		val := valueMount.Value
-		if valueMount.B64dec {
+	for _, values := range volMount.Values {
+		for k, v := range values {
+			val := v
 			decoded, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
 				return errors.New("failed to decode Base64 value. please make sure value provided is Base64 encoded")
 			}
 			val = string(decoded)
 			log.Println("decoded value " + val + " into string")
-		}
-		if runtime.GOOS == util.WindowsOS {
-			sb.WriteString("; Add-Content -Path ")
-			sb.WriteString(volMount.Name + "/" + valueMount.FileName)
-			sb.WriteString(" -Value @\"\n")
-			sb.WriteString(val)
-			sb.WriteString("\n\"@")
-		} else {
-			sb.WriteString("cat >> ")
-			sb.WriteString(volMount.Name + "/" + valueMount.FileName)
-			sb.WriteString(" <<EOL\n")
-			sb.WriteString(val)
-			sb.WriteString("\nEOL\n")
+			if runtime.GOOS == util.WindowsOS {
+				sb.WriteString("; Add-Content -Path ")
+				sb.WriteString(volMount.Name + "/" + k)
+				sb.WriteString(" -Value @\"\n")
+				sb.WriteString(val)
+				sb.WriteString("\n\"@")
+			} else {
+				sb.WriteString("cat >> ")
+				sb.WriteString(volMount.Name + "/" + k)
+				sb.WriteString(" <<EOL\n")
+				sb.WriteString(val)
+				sb.WriteString("\nEOL\n")
+			}
 		}
 	}
 	args = append(args, sb.String())
@@ -516,9 +516,11 @@ func (b *Builder) populateVolumeWithFiles(ctx context.Context, volMount *volume.
 		dataContainerArgs = []string{"/bin/sh", "-c"}
 		dataSB.WriteString("docker run --rm -v " + b.workspaceDir + ":/source -v ")
 		dataSB.WriteString(volMount.Name + ":/dest -w /source alpine cp ")
-		for _, valMount := range volMount.Values {
-			dataSB.WriteString(volMount.Name + "/" + valMount.FileName)
-			dataSB.WriteString(" ")
+		for _, values := range volMount.Values {
+			for k := range values {
+				dataSB.WriteString(volMount.Name + "/" + k)
+				dataSB.WriteString(" ")
+			}
 		}
 		dataSB.WriteString("/dest")
 	}

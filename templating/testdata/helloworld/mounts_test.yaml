@@ -6,14 +6,11 @@ secrets:
 volumes:
   - name: mysecrets
     values:
-      - filename: mysecret1
-        value: {{.Secrets.mysecret | b64enc}}
-        b64dec: true
-      - filename: mysecret2
-        value: ---Begin Secret Key 2 Here---
+      - mysecret1.txt: {{.Secrets.mysecret | b64enc}}
+      - mysecret2.txt: {{"this is a non encoded string" | b64enc}}
         
 steps:
-  - cmd: bash cat /run/test/mysecret1 /run/test/mysecret2
+  - cmd: bash cat /run/test/mysecret1.txt /run/test/mysecret2.txt
     mounts:
       - name: mysecrets
         mountPath: /run/test

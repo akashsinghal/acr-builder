@@ -61,7 +61,7 @@ type Step struct {
 	Isolation           string          `yaml:"isolation"`
 	CPUS                string          `yaml:"cpus"`
 	Cache               string          `yaml:"cache"`
-	Mounts              []*volume.Mount `yaml:"mounts"`
+	Mounts              []*volume.Mount `yaml:"volumeMounts"`
 	Push                []string        `yaml:"push"`
 	Envs                []string        `yaml:"env"`
 	Expose              []string        `yaml:"expose"`

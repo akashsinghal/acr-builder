@@ -206,10 +206,9 @@ func TestValidateMountVolumeNames(t *testing.T) {
 	volumes := []*volume.VolumeMount{
 		&volume.VolumeMount{
 			Name: "vol1",
-			Values: []*volume.ValueMount{
-				&volume.ValueMount{
-					FileName: "a",
-					Value:    "this is a test",
+			Values: []map[string]string{
+				{
+					"a": "this is a test",
 				},
 			},
 		},
