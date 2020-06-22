@@ -11,6 +11,6 @@ volumes:
         
 steps:
   - cmd: bash cat /run/test/mysecret1.txt /run/test/mysecret2.txt
-    mounts:
+    volumeMounts:
       - name: mysecrets
         mountPath: /run/test
