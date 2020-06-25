@@ -30,11 +30,11 @@ func (v *VolumeMount) Validate() error {
 	for _, values := range v.Values {
 		if values != nil {
 			if len(values) > 1 {
-				return errors.New("each new <filename:values> mapping must start as a new element of list")
+				return errors.New("each new <secret_name:value> mapping must start as a new element of list")
 			}
 			for k := range values {
 				if k == "" {
-					return errors.New("filename provided for value is empty")
+					return errors.New("secret name provided for value is empty")
 				}
 			}
 		}
