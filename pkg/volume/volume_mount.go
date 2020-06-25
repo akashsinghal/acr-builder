@@ -12,7 +12,7 @@ import (
 // VolumeMount describes a Docker bind mounted volume.
 type VolumeMount struct {
 	Name   string              `yaml:"name"`
-	Values []map[string]string `yaml:"values"`
+	Values []map[string]string `yaml:"secret"`
 }
 
 //Validate checks whether VolumeMount is well formed
